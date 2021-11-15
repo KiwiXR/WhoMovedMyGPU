@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Who Moved My GPU</title>
+    <meta http-equiv="refresh" content="{{ refresh_time }};url=gpu">
+    <style>
+        [v-cloak] {
+          display: none;
+        }
+        #header {
+            background-color: white;
+            color: black;
+            text-align:center;
+            padding:5px;
+        }
+        #nav {
+            line-height:30px;
+            background-color:#eeeeee;
+            height:300px;
+            width:100px;
+            float:left;
+            padding:5px;
+        }
+        #section {
+            width:350px;
+            float:left;
+            padding:10px;
+        }
+        #footer {
+            background-color:black;
+            color:white;
+            clear:both;
+            text-align:center;
+           padding:5px;
+        }
+</style>
+</head>
+<body>
+<div id="header">
+<h1>{{ title }}</h1>
+<a href="{{ url_for('fix') }}">Fix Display</a><br><br>
+<div>
+    <span style="background-color: #28b637; color: white">&nbsp;Normal&nbsp;</span>&nbsp;
+    <span style="background-color: #a341ff; color: white">&nbsp;Moderate&nbsp;</span>&nbsp;
+    <span style="background-color: #f7941d; color: white">&nbsp;Severe&nbsp;</span>&nbsp;
+    <span style="background-color: #f7241d; color: white">&nbsp;Extreme&nbsp;</span>
+</div>
+</div>
+<!--
+ref = {
+    'name': 0,
+    'index': 1,
+    'utilization.gpu': 2,
+    'memory.total': 3,
+    'memory.free': 4,
+    'power.limit': 5,
+    'power.draw': 6
+}
+-->
+<div align="center">
+    {% for key, rec in host_info.items() %}
+        <h3>[{{ rec[0] }}]</h3>
+        {% set cpu_ncore = rec[2] | int %}
+        {% set cpu_load1 = rec[3][0] | float %}
+        {% set cpu_load2 = rec[3][1] | float %}
+        {% set cpu_load3 = rec[3][2] | float %}
+        {% if cpu_load1 > cpu_load2 %}
+            {% set cpu_load = cpu_load1 %}
+        {% else %}
+            {% set cpu_load = cpu_load2 %}
+        {% endif %}
+        {% if cpu_load < cpu_load3 %}
+            {% set cpu_load = cpu_load3 %}
+        {% endif %}
+
+        {% if cpu_load > 5.0 * cpu_ncore %}
+            <h5 style="color: #f7241d; ">[CPU &lt;{{ cpu_ncore }} core&gt;&nbsp;-&nbsp;Extreme]<br>&nbsp;&nbsp;{{ cpu_load1 }} (last 1 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load2 }} (last 5 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load3 }} (last 15 min)</h5>
+        {% else %}
+            {% if cpu_load > 1.0 * cpu_ncore %}
+                <h5 style="color: #f7941d; ">[CPU &lt;{{ cpu_ncore }} core&gt;&nbsp;-&nbsp;Severe]<br>&nbsp;&nbsp;{{ cpu_load1 }} (last 1 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load2 }} (last 5 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load3 }} (last 15 min)</h5>
+            {% else %}
+                {% if cpu_load > 0.7 * cpu_ncore %}
+                    <h5 style="color: #a341ff; ">[CPU &lt;{{ cpu_ncore }} core&gt;&nbsp;-&nbsp;Moderate]<br>&nbsp;&nbsp;{{ cpu_load1 }} (last 1 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load2 }} (last 5 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load3 }} (last 15 min)</h5>
+                {% else %}
+                    <h5 style="color: #28b637; ">[CPU &lt;{{ cpu_ncore }} core&gt;&nbsp;-&nbsp;Normal]<br>&nbsp;&nbsp;{{ cpu_load1 }} (last 1 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load2 }} (last 5 min)&nbsp;&nbsp;&nbsp;&nbsp;{{ cpu_load3 }} (last 15 min)</h5>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+        <table>
+            {% for card_info in rec[1] %}
+            <tr>
+                <td align="right">GPU{{ card_info[1] }}&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                <td align="right">
+                {% set util = card_info[2][:-2] | int %}
+                {% if util > 90 %}
+                    <span style="color: #f7241d; ">{{ card_info[2] }}</span>
+                {% else %}
+                    {% if util > 70 %}
+                        <span style="color: #f7941d; ">{{ card_info[2] }}</span>
+                    {% else %}
+                        {% if util > 10 %}
+                            <span style="color: #a341ff; ">{{ card_info[2] }}</span>
+                        {% else %}
+                            <span style="color: #28b637; ">{{ card_info[2] }}</span>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                </td>
+                <td align="right">{{ card_info[6] }}</td><td>/</td><td align="right">{{ card_info[5] }}&nbsp;&nbsp;&nbsp;&nbsp;</td>
+
+                <td align="right">
+                {% set mem = card_info[4][:-4] | int %}
+                {% set max_mem = card_info[3][:-4] | int %}
+                {% if mem < 5120 %}
+                    <span style="color: #f7241d; ">{{ card_info[4] }}</span>
+                {% else %}
+                    {% if mem < 10240 %}
+                        <span style="color: #f7941d; ">{{ card_info[4] }}</span>
+                    {% else %}
+                        {% if mem < 0.8 * max_mem %}
+                            <span style="color: #a341ff; ">{{ card_info[4] }}</span>
+                        {% else %}
+                            <span style="color: #28b637; ">{{ card_info[4] }}</span>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+                </td>
+                <td>/</td>
+                <td align="right">
+                    {% if mem == max_mem %}
+                        <span style="background-color: #bfffdb; color: #28b637; ">{{ card_info[3] }}</span>
+                    {% else %}
+                        {{ card_info[3] }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+        <br>
+    {% endfor %}
+    <br><br><br><br><br>
+</div>
+</body>
+</html>

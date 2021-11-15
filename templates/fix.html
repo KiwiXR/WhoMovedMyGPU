@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fix Display</title>
+    <style>
+        [v-cloak] {
+          display: none;
+        }
+        #header {
+            background-color: white;
+            color: black;
+            text-align:center;
+            padding:5px;
+        }
+        #nav {
+            line-height:30px;
+            background-color:#eeeeee;
+            height:300px;
+            width:100px;
+            float:left;
+            padding:5px;
+        }
+        #section {
+            width:350px;
+            float:left;
+            padding:10px;
+        }
+        #footer {
+            background-color:black;
+            color:white;
+            clear:both;
+            text-align:center;
+           padding:5px;
+        }
+    </style>
+    <script language="javascript">
+    function reboot()
+    {
+    var objShell = new ActiveXObject("wscript.shell");
+    objShell.Run("cmd.exe /c auto.bat",0,true)
+    }
+    </script>
+</head>
+<body>
+<div id="header">
+    <h1>Server reboot done!</h1>
+    <h2>Click the link below for refreshed info.</h2>
+    <a href="{{ url_for('gpu') }}" onclick="reboot()">Who Moved My GPU?</a>
+</div>
+</body>
+</html>
